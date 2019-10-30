@@ -1,25 +1,28 @@
-const express = require('express');
 const path = require('path');
-const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const express = require('express');
 const fs = require('fs');
 
-let app = express();
+const formPath = path.join(__dirname, './contact-form.json')
 
-app.use(bodyParser.urlencoded({extended: false}));
+const app = express();
+
+app.use(morgan('dev'));
+app.use(express.static('public'));
+app.use(express.urlencoded({extended: false}));
+
+app.get('/contact-form', (req, res) => {
+    let data = fs.readFileSync(formPath);
+    let info = JSON.parse(data);
+    res.send(info);
+})
 
 app.post('/contact-form', (req, res) => {
-    console.log(req.body.email);
-    console.log(req.body.name);
-    res.send('Thank you for submitting your contact form.');
+    let data = fs.readFileSync(formPath);
+    let info = JSON.parse(data);
+    info.push(req.body);
+    fs.writeFileSync(formPath, JSON.stringify(info));
+    res.redirect('/');
 });
-
-// app.use((req, res, next) => {
-//     fs.appendFileSync('log.txt', `${req.url}/n`);
-//     next();
-    // console.log(req.url)
-    // next();
-// })
-
-app.use(express.static(path.join(__dirname, '../public')));
 
 app.listen(3000, () => console.log('Server running on port 3000!'));
